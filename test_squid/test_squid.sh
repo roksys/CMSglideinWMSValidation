@@ -17,24 +17,24 @@ function warn {
 }
 
 # set up CMSSW environment; CMS_PATH needed for squid/frontier test:
-if [ -f "$VO_CMS_SW_DIR/cmsset_default.sh" ]; then
-  echo "Found CMS SW in $VO_CMS_SW_DIR" 1>&2
-  source "$VO_CMS_SW_DIR/cmsset_default.sh"
-elif [ -f "$OSG_APP/cmssoft/cms/cmsset_default.sh" ]; then
-  echo "Found CMS SW in $OSG_APP/cmssoft/cms" 1>&2
-  source "$OSG_APP/cmssoft/cms/cmsset_default.sh"
-elif [ -f "$CVMFS/cms.cern.ch/cmsset_default.sh" ]; then
+if [ -f "$CVMFS/cms.cern.ch/cmsset_default.sh" ]; then
   echo "Found CMS SW in $CVMFS/cms.cern.ch" 1>&2
   source "$CVMFS/cms.cern.ch/cmsset_default.sh"
 elif [ -f "/cvmfs/cms.cern.ch/cmsset_default.sh" ]; then
   echo "Found CMS SW in /cvmfs/cms.cern.ch" 1>&2
   source "/cvmfs/cms.cern.ch/cmsset_default.sh"
+elif [ -f "$VO_CMS_SW_DIR/cmsset_default.sh" ]; then
+  echo "Found CMS SW in $VO_CMS_SW_DIR" 1>&2
+  source "$VO_CMS_SW_DIR/cmsset_default.sh"
+elif [ -f "$OSG_APP/cmssoft/cms/cmsset_default.sh" ]; then
+  echo "Found CMS SW in $OSG_APP/cmssoft/cms" 1>&2
+  source "$OSG_APP/cmssoft/cms/cmsset_default.sh"
 else
   echo "cmsset_default.sh not found!\n" 1>&2
-  echo "Looked in $VO_CMS_SW_DIR/cmsset_default.sh" 1>&2
-  echo "and $OSG_APP/cmssoft/cms/cmsset_default.sh" 1>&2
-  echo "and $CVMFS/cms.cern.ch/cmsset_default.sh" 1>&2
+  echo "Looked in$CVMFS/cms.cern.ch/cmsset_default.sh" 1>&2
   echo "and /cvmfs/cms.cern.ch/cmsset_default.sh" 1>&2
+  echo "and $VO_CMS_SW_DIR/cmsset_default.sh" 1>&2
+  echo "and $OSG_APP/cmssoft/cms/cmsset_default.sh" 1>&2
   exit 1
 fi
 
