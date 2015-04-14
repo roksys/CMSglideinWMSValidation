@@ -25,13 +25,17 @@ else
    exit 1
 fi
 
-archs=`grep '^CMS_SCRAM_ARCHES ' $glidein_config | awk '{print $2}'`
-if [ -z "$archs" ]; then
+if [ -z "$glidein_config" ]; then
   archs="slc6_amd64_gcc481"
+else
+  archs=`grep '^CMS_SCRAM_ARCHES ' $glidein_config | awk '{print $2}'`
+  if [ -z "$archs" ]; then
+    archs="slc6_amd64_gcc481"
+  fi
 fi
 echo "Looking for CMS SW on $archs" 1>&2
 
-tmpname=$PWD/installed_cms_software_tmp_$$.tmp
+tmpname=`mktemp --tmpdir=$PWD installed_cms_software.XXXXXX`
 for arch in $archs
 do
    echo "Analyzing $arch" 1>&2
@@ -42,6 +46,7 @@ done
 # Format the CMSSW list
 
 sw_list=`cat $tmpname | awk '{if (length(a)!=0) {a=a "," $0} else {a=$0}}END{print a}'`
+rm $tmpname
 
 if [ -z "$sw_list" ]; then
   echo "No CMS SW found!" 1>&2
