@@ -1,3 +1,13 @@
 export OSG_WN_TMP=$PWD
 export _CONDOR_SCRATCH_DIR=$PWD
 export HOME=$PWD
+
+# Make sure condor_chirp is available
+
+if [ -e "$CONDOR_CONFIG" ]; then
+  BASE=`dirname $CONDOR_CONFIG`/main/condor/libexec
+  if [ -d "$BASE" ]; then
+    export PATH=$BASE:$PATH
+  fi
+fi
+
