@@ -51,7 +51,7 @@ def add_condor_config_var(glidein_config, name=None, kind="C", value=None, publi
             if line.startswith(name):
                 continue
             tempfd.write(line)
-        tempfd.write("%s %s %s %s Y %s -\n" % (name, kind, value, condor_name, exp_condor))
+        tempfd.write("%s %s %s %s N %s -\n" % (name, kind, value, condor_name, exp_condor))
     except:
         os.unlink(tempfd.name)
         raise
@@ -109,7 +109,7 @@ def create_local_glidein(glidein_config):
     if not groups:
         return
 
-    value = "stringListsIntersect(CMSGroups, %s)" % ",".join([gname for gname in groups])
+    value = "stringListsIntersect(CMSGroups, \"%s\")" % ",".join([gname for gname in groups])
     add_glidein_config("GLIDEIN_Start", value)
 
 
