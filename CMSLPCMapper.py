@@ -73,6 +73,11 @@ def check_caches():
 
 def lpcUserDN(user):
     check_caches()
+    if isinstance(user, classad.ExprTree):
+        try:
+            user = user.eval()
+        except:
+            return False
     return user in g_cache
 
 
@@ -86,4 +91,7 @@ if __name__ == '__main__':
     print classad.ExprTree('lpcUserDN("/DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=bbockelm/CN=659869/CN=Brian Paul Bockelman")').eval()
     print lpcUserDN("/DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=bbockelm/CN=659869/CN=Brian Paul Bockelman/false")
     print classad.ExprTree('lpcUserDN("/DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=bbockelm/CN=659869/CN=Brian Paul Bockelman/false")').eval()
+    ad = classad.ClassAd({'x509userproxysubject': '/DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=bbockelm/CN=659869/CN=Brian Paul Bockelman', 'foo': classad.ExprTree('lpcUserDN(x509userproxysubject)')})
+    print ad.eval("foo")
+
 
