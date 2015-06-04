@@ -1,6 +1,8 @@
 
 import os
 import time
+import shutil
+import urllib
 import tempfile
 
 import classad
@@ -13,12 +15,12 @@ g_cache = set()
 def write_cache_file():
     final_fname = get_cache_filename()
     dirname, prefix = os.path.split(final_fname)
-    fd, name = tempfile.mkstemp(dirname, prefix)
+    fd, name = tempfile.mkstemp(dir=dirname, prefix=prefix)
     try:
         for dn in g_cache:
-            fd.write(dn + "\n")
-        fd.close()
-        fd.rename(name, final_fname)
+            os.write(fd, dn + "\n")
+        os.close(fd)
+        os.rename(name, final_fname)
     except Exception, e:
         htcondor.log(htcondor.LogLevel.Always, "Failed to write out cache file: %s" % str(e))
         try:
@@ -85,13 +87,17 @@ classad.register(lpcUserDN)
 
 
 if __name__ == '__main__':
-    htcondor.param['CMSLPC_USER_CACHE'] = 'test_lpccache.txt'
+    htcondor.param['CMSLPC_USER_CACHE'] = 'test_lpccache.txt.temp'
+    shutil.copy('test_lpccache.txt', 'test_lpccache.txt.temp')
     htcondor.enable_debug()
-    print lpcUserDN("/DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=bbockelm/CN=659869/CN=Brian Paul Bockelman")
-    print classad.ExprTree('lpcUserDN("/DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=bbockelm/CN=659869/CN=Brian Paul Bockelman")').eval()
-    print lpcUserDN("/DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=bbockelm/CN=659869/CN=Brian Paul Bockelman/false")
-    print classad.ExprTree('lpcUserDN("/DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=bbockelm/CN=659869/CN=Brian Paul Bockelman/false")').eval()
+    print "true ==", lpcUserDN("/DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=bbockelm/CN=659869/CN=Brian Paul Bockelman")
+    print "true ==", classad.ExprTree('lpcUserDN("/DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=bbockelm/CN=659869/CN=Brian Paul Bockelman")').eval()
+    print "false ==", lpcUserDN("/DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=bbockelm/CN=659869/CN=Brian Paul Bockelman/false")
+    print "false ==", classad.ExprTree('lpcUserDN("/DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=bbockelm/CN=659869/CN=Brian Paul Bockelman/false")').eval()
     ad = classad.ClassAd({'x509userproxysubject': '/DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=bbockelm/CN=659869/CN=Brian Paul Bockelman', 'foo': classad.ExprTree('lpcUserDN(x509userproxysubject)')})
-    print ad.eval("foo")
+    print "true ==", ad.eval("foo")
+    htcondor.param['CMSLPC_USER_URL'] = 'http://hcc-briantest.unl.edu/test_lpccache.txt'
+    g_expire_time = 0
+    print "true ==", classad.ExprTree('lpcUserDN("/DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=bbockelm/CN=659869/CN=Brian Paul Bockelman/true")').eval()
 
 
