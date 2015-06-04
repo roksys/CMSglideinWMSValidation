@@ -87,9 +87,17 @@ def add_glidein_config(name, value):
     fd.close()
  
 
+def get_siteconf_path():
+    if 'VO_CMS_SW_DIR' in os.environ:
+        siteconf_path = os.path.join(os.environ['VO_CMS_SW_DIR'], "SITECONF")
+    else:
+        cvmfs_path = os.environ.get("CVMFS", "/cvmfs")
+        siteconf_path = os.path.join(cvmfs_path, "cms.cern.ch", "SITECONF")
+    return siteconf_path
+
+
 def create_local_glidein(glidein_config):
-    cvmfs_path = os.environ.get("CVMFS", "/cvmfs")
-    local_gconf = os.path.join(cvmfs_path, "cms.cern.ch", "SITECONF", "local", "GlideinConfig", 'local-groups.txt')
+    local_gconf = os.path.join(get_siteconf_path(), "local", "GlideinConfig", 'local-groups.txt')
     cmssite = glidein_config.get("GLIDEIN_CMSSite")
 
     if not os.path.exists(local_gconf) and not cmssite:
@@ -132,14 +140,15 @@ def main():
             continue
         glidein_config[info[0]] = info[1]
 
-    cvmfs_path = os.environ.get("CVMFS", "/cvmfs")
-    local_siteconf = os.path.join(cvmfs_path, "cms.cern.ch", "SITECONF", "local")
+    local_siteconf = os.path.join(get_siteconf_path(), "local")
     if not os.path.exists(local_siteconf):
-        print "CVMFS siteconf path (%s) does not exist; is CVMFS running and configured properly?" % cvmfs_path
+        print "CVMFS siteconf path (%s) does not exist; is CVMFS running and configured properly?" % local_siteconf
+    else:
+        print "Using SITECONF found at %s." % local_siteconf
 
     job_config = os.path.join(local_siteconf, "JobConfig", "site-local-config.xml")
     if not os.path.exists(job_config):
-        print "site-local-config.xml does not exist in CVMFS (looked at %s); is CVMFS running and configured properly?" % cvmfs_path
+        print "site-local-config.xml does not exist in CVMFS (looked at %s); is CVMFS running and configured properly?" % job_config
 
     tree = xml.etree.ElementTree.parse(job_config)
     job_config_root = tree.getroot()
