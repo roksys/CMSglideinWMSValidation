@@ -11,6 +11,8 @@ condor_vars_file=`awk '/^CONDOR_VARS_FILE /{print $2}' $glidein_config`
 add_config_line_source=`awk '/^ADD_CONFIG_LINE_SOURCE /{print $2}' $glidein_config`
 source $add_config_line_source
 
+PARROT_RUN_WORKS=`grep -i "^PARROT_RUN_WORKS " $glidein_config | awk '{print $2}'`
+
 # big fix for glideinWMS:
 function warn {
   echo `date` $@ 1>&2
@@ -29,12 +31,16 @@ elif [ -f "$VO_CMS_SW_DIR/cmsset_default.sh" ]; then
 elif [ -f "$OSG_APP/cmssoft/cms/cmsset_default.sh" ]; then
   echo "Found CMS SW in $OSG_APP/cmssoft/cms" 1>&2
   source "$OSG_APP/cmssoft/cms/cmsset_default.sh"
+elif [ "X$PARROT_RUN_WORKS" = "XTRUE" ]; then
+   echo "Pilot will use parrot; this already checked for squid functionality." 1>&2
+   exit 0
 else
   echo "cmsset_default.sh not found!\n" 1>&2
   echo "Looked in$CVMFS/cms.cern.ch/cmsset_default.sh" 1>&2
   echo "and /cvmfs/cms.cern.ch/cmsset_default.sh" 1>&2
   echo "and $VO_CMS_SW_DIR/cmsset_default.sh" 1>&2
   echo "and $OSG_APP/cmssoft/cms/cmsset_default.sh" 1>&2
+  echo "and \$PARROT_RUN_WORKS is set to $PARROT_RUN_WORKS" 1>&2
   exit 1
 fi
 

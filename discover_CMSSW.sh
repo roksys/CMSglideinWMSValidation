@@ -28,6 +28,7 @@ else
    echo "and /cvmfs/cms.cern.ch/cmsset_default.sh" 1>&2
    echo "and $VO_CMS_SW_DIR/cmsset_default.sh" 1>&2
    echo "and $OSG_APP/cmssoft/cms/cmsset_default.sh" 1>&2
+   echo "and \$PARROT_RUN_WORKS is set to $PARROT_RUN_WORKS" 1>&2
    exit 1
 fi
 

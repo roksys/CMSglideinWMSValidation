@@ -142,6 +142,9 @@ def main():
 
     local_siteconf = os.path.join(get_siteconf_path(), "local")
     if not os.path.exists(local_siteconf):
+        if glidein_config.get("PARROT_RUN_WORKS", "FALSE") == "TRUE":
+            print "Using parrot -- skipping SITECONF processing."
+            sys.exit(0)
         print "CVMFS siteconf path (%s) does not exist; is CVMFS running and configured properly?" % local_siteconf
     else:
         print "Using SITECONF found at %s." % local_siteconf
