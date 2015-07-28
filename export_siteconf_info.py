@@ -186,6 +186,16 @@ def main():
     if not pnn_found:
         print "No PhEDEx node name found for fallback stageout."
 
+    if 'USER_DN' in os.environ:
+        dn = os.environ.get("USER_DN")
+        r = re.compile("[-._@A-Za-z0-9=/]+")
+        if r.match(dn):
+            print "Based on USER_DN environment variable, limiting the pilot's running jobs to user %s" % dn
+            add_glidein_config("APPEND_REQ_VANILLA", '("%s" =?= x509userproxysubject)' % dn)
+            add_condor_config_var(glidein_config, name="APPEND_REQ_VANILLA", kind="C", value="-")
+        else:
+            print
+
     if 'GLIDEIN_CMSSite_Override' in glidein_config:
         add_glidein_config('GLIDEIN_CMSSite', glidein_config['GLIDEIN_CMSSite_Override'])
 
