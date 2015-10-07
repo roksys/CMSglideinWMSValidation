@@ -10,7 +10,7 @@ Tests the local FroNtier squid
 #   3) file $CMS_PATH/SITECONF/local/JobConfig/site-local-config.xml
 #      contains the location of the local FroNtier squid server
 #
-__revision__ = "$Id: test_squid.py,v 1.1 2012/04/27 18:19:51 sfiligoi Exp $"
+__revision__ = "$Id: test_squid.py,v 1.31 2013/03/20 16:27:34 llinares Exp $"
 import os
 import sys
 import urllib2
@@ -178,14 +178,14 @@ if not os.environ.has_key("CMS_PATH"):
 #
 slcfil = os.environ["CMS_PATH"] + \
          "/SITECONF/local/JobConfig/site-local-config.xml"
-print slcfil
+print 'SiteLocalConfig: ' + slcfil
 if not os.path.exists(slcfil):
 	print "test_squid.py: Error. file " + slcfil + " does not exist"
 	sys.exit(same_error)
 #
 # Print out site-local-config.xml
 #
-print "Contents of site-local-config.xml are:"
+print "\nContents of site-local-config.xml are:"
 fileobj = open(slcfil,'r')
 slcprint = fileobj.read()
 slcprint = slcprint.replace('<','&lt;')
@@ -209,13 +209,17 @@ print "site: " + site
 #
 # Work out local FroNtier squid server from site-local-config.xml
 #
-#
-# Check for at least one proxy tag
+# Check for at least one proxy or proxyconfig tag
 #
 prlist = [x.getAttribute('url') for x in slcdom.getElementsByTagName("proxy")]
 if len(prlist) == 0:
-	print "test_squid.py: Error. no proxy tag in file " + slcfil
-	sys.exit(same_error)    
+	prcfglist = [x.getAttribute('url') for x in slcdom.getElementsByTagName("proxyconfig")]
+	if len(prcfglist) == 0:
+		print "test_squid.py: Error. no proxy or proxyconfig tag in file " + slcfil
+		sys.exit(same_error)    
+	print
+	print "test_squid.py: only proxyconfig urls defined, ignoring squids for now"
+	print
 # 
 # Check whether has load balance proxies from site-local-config.xml
 # 
@@ -228,7 +232,7 @@ print "loadtag: " + loadtag
 #
 # Print script version information
 #
-print "script version " + __revision__
+print "script version: " + __revision__
 #
 # Set server for urllib2
 #
@@ -271,7 +275,10 @@ format = "%s?type=frontier_request:1:DEFAULT&encoding=BLOB%s&p1=%s"
 queryStart = time.localtime()
 print "\nQuery started: " + time.strftime("%m/%d/%y %H:%M:%S %Z", queryStart)
 t1 = time.time()
-test_result = "Failed"
+if len(prlist) == 0:
+    test_result = "OK"
+else:
+    test_result = "Failed"
 ever_failed = "False"
 #
 for squid in prlist:
@@ -280,6 +287,7 @@ for squid in prlist:
     #
 	print "squid: " + squid   
 	os.environ["http_proxy"] = squid
+	os.environ["HTTP_PROXY"] = squid
     #
     # Create request
     #
