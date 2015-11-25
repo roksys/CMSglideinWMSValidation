@@ -62,13 +62,13 @@ def cache_sites():
         g_expire_time = time.time() + 60
         return
     for entry in sites:
-        full_path = os.path.join(base_dir, entry, 'GlideinConfig', 'local-users.txt')
+        full_path = os.path.join(base_dir, entry, 'GlideinConfig', 'local-groups.txt')
         if g_ignore_local and (entry == 'local'):
-            continue
-        if not os.path.isfile(full_path):
             continue
         groups = cache.setdefault(entry, set())
         groups.add(entry)
+        if not os.path.isfile(full_path):
+            continue
         try:
             valid_group_re = re.compile(r"[-_A-Za-z0-9]+")
             if os.path.exists(local_gconf):
@@ -102,11 +102,22 @@ def is_local_user(user, site):
     user_groups = g_cache.setdefault(user, ("", set()))[1]
     site_groups = g_site_cache.setdefault(site, ("", set()))[1]
     return bool(user_groups.intersection(site_groups))
-     
+
+
+g_split_re = re.compile(r"\s*,\s*")
+def is_local_group(groups, site):
+    check_caches()
+    groups = g_split_re.split(groups)
+    groups = set([i for i in groups if i])
+    site_groups = g_site_cache.setdefault(site, ("", set()))[1]
+    return bool(groups.intersection(site_groups))
+
 
 if __name__ == '__main__':
     print map_user_to_groups("bbockelm")
-    print is_local_user("bbockelm", "local")
+    print is_local_user("bbockelm", "T2_US_Nebraska")
+    print is_local_group("HIG", "T2_US_Nebraska")
+    print is_local_group("T2_US_Nebraska", "T2_US_Nebraska")
 
     #import classad
     #classad.register(map_user_to_groups)

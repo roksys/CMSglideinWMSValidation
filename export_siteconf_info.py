@@ -107,7 +107,7 @@ def create_local_glidein(glidein_config):
     groups = set()
     if cmssite:
         groups.add(cmssite)
-    valid_group_re = re.compile(r"[-_A-Za-z0-9]+")
+    valid_group_re = re.compile(r"[-_=/A-Za-z0-9]+")
     if os.path.exists(local_gconf):
         for line in open(local_gconf).xreadlines():
             line = line.strip()
