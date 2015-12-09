@@ -65,16 +65,15 @@ def cache_sites():
         full_path = os.path.join(base_dir, entry, 'GlideinConfig', 'local-groups.txt')
         if g_ignore_local and (entry == 'local'):
             continue
-        groups = cache.setdefault(entry, set())
-        groups.add(entry)
         if not os.path.isfile(full_path):
             continue
         try:
-            valid_group_re = re.compile(r"[-_A-Za-z0-9]+")
-            if os.path.exists(local_gconf):
-                for line in open(local_gconf).xreadlines():
+            valid_group_re = re.compile(r"[-/_A-Za-z0-9]+")
+            if os.path.exists(full_path):
+                for line in open(full_path).xreadlines():
                     line = line.strip()
                     if valid_group_re.match(line):
+                        groups = cache.setdefault(entry, set())
                         groups.add(line)
         except:
             pass
