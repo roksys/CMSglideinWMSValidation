@@ -25,6 +25,7 @@ def parse_opts():
     parser.add_option("-s", "--site", help="Local site name (defaults to site configured in CVMFS)", dest="site")
     parser.add_option("-l", "--local-users", help="Location of local-users.txt", default="/cvmfs/cms.cern.ch/SITECONF/local/GlideinConfig/local-users.txt", dest="local_users")
     parser.add_option("-c", "--const", help="Schedd query constraint", default='CMSGWMS_Type =?= "crabschedd"', dest="const");
+    parser.add_option("-j", "--jobs-only", help="Query jobs instead of autoclusters", default=False, action="store_true")
     parser.add_option("-q", "--quiet", help="Reduce output verbosity", default=False, action="store_true")
 
     opts, args = parser.parse_args()
@@ -63,6 +64,9 @@ def parse_opts():
         print >> sys.stderr, str(ie)
         sys.exit(1)
 
+    if opts.pool:
+        opts.pool = opts.pool.split(",")
+
     return opts
 
 
@@ -75,25 +79,46 @@ def main():
         if line.startswith("#"): continue
         users.add(line)
 
-    coll = htcondor.Collector(opts.pool)
+    collectors = set()
+    for pool in opts.pool:
+        coll = htcondor.Collector(pool)
+        collectors.add(coll)
+        if not opts.quiet: print >> sys.stderr, "Querying collector %s for schedds matching" % pool, opts.const
+
     reqs = '(JobStatus == 1) && stringListMember(%s, DESIRED_Sites)' % classad.quote(opts.site)
-    if not opts.quiet: print >> sys.stderr, "Querying collector %s for schedds matching" % opts.pool, opts.const
     idle_count = {}
     for user in users:
         if user == "*": continue
         idle_count.setdefault(user, 0)
     user_map = {}
     if not opts.quiet: print >> sys.stderr, "Schedd job requirements:", reqs
-    for schedd_ad in coll.query(htcondor.AdTypes.Schedd, opts.const, ['MyAddress', 'CondorVersion', 'Name', 'ScheddIpAddr']):
-        if not opts.quiet: print >> sys.stderr, "Querying", schedd_ad.get('Name', "Unknown")
-        schedd = htcondor.Schedd(schedd_ad)
-        for cluster in schedd.xquery(requirements=reqs, projection=["x509userproxysubject", "CRAB_UserHN", "JobStatus"], opts=htcondor.QueryOpts.AutoCluster):
-            user = cluster.get("CRAB_UserHN")
-            if (user in users) or ("*" in users):
-                idle_count.setdefault(user, 0)
-                idle_count[user] += int(cluster.get("JobCount", 0))
-                if 'x509userproxysubject' in cluster:
-                    user_map[user] = cluster['x509userproxysubject']
+    for coll in collectors:
+        for schedd_ad in coll.query(htcondor.AdTypes.Schedd, opts.const, ['MyAddress', 'CondorVersion', 'Name', 'ScheddIpAddr']):
+            if not opts.quiet: print >> sys.stderr, "Querying", schedd_ad.get('Name', "Unknown")
+            schedd = htcondor.Schedd(schedd_ad)
+            try:
+                if opts.jobs_only:
+                    schedd_data = schedd.xquery(requirements=reqs, projection=["x509userproxysubject", "CRAB_UserHN", "JobStatus"])
+                else:
+                    schedd_data = schedd.xquery(requirements=reqs, projection=["x509userproxysubject", "CRAB_UserHN", "JobStatus"], opts=htcondor.QueryOpts.AutoCluster)
+            except RuntimeError, e:
+                if not opts.quiet: print >> sys.stderr, "Error querying %s: %s" % (schedd_ad.get('Name', "Unknown"), e)
+            if not opts.jobs_only:
+                for cluster in schedd_data:
+                    user = cluster.get("CRAB_UserHN")
+                    if (user in users) or ("*" in users):
+                        idle_count.setdefault(user, 0)
+                        idle_count[user] += int(cluster.get("JobCount", 0))
+                        if 'x509userproxysubject' in cluster:
+                            user_map[user] = cluster['x509userproxysubject']
+            if opts.jobs_only:
+                for job in schedd_data:
+                    user = job.get("CRAB_UserHN")
+                    if (user in users) or ("*" in users):
+                        idle_count.setdefault(user, 0)
+                        idle_count[user] += 1
+                        if 'x509userproxysubject' in job:
+                            user_map[user] = job['x509userproxysubject']
     results = {'users': user_map, 'idle': idle_count}
     print json.dumps(results)
 
