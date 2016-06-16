@@ -21,7 +21,7 @@ def get_siteconf_path():
 
 def parse_opts():
     parser = optparse.OptionParser()
-    parser.add_option("-p", "--pool", default="vocms099.cern.ch", help="HTCondor pool to query", dest="pool")
+    parser.add_option("-p", "--pool", default="cmsgwms-collector-global.cern.ch", help="HTCondor pool to query", dest="pool")
     parser.add_option("-s", "--site", help="Local site name (defaults to site configured in CVMFS)", dest="site")
     parser.add_option("-l", "--local-users", help="Location of local-users.txt", default="/cvmfs/cms.cern.ch/SITECONF/local/GlideinConfig/local-users.txt", dest="local_users")
     parser.add_option("-c", "--const", help="Schedd query constraint", default='CMSGWMS_Type =?= "crabschedd"', dest="const");
