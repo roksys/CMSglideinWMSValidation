@@ -191,7 +191,7 @@ def main():
         r = re.compile("[-._@A-Za-z0-9=/]+")
         if r.match(dn):
             print "Based on USER_DN environment variable, limiting the pilot's running jobs to user %s" % dn
-            add_glidein_config("GLIDEIN_USER", '("%s")' % dn)
+            add_glidein_config("GLIDEIN_USER", '"%s"' % dn)
             add_condor_config_var(glidein_config, name="GLIDEIN_USER", kind="C", value="-")
         else:
             print
