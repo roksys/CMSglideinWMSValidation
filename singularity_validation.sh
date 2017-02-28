@@ -172,6 +172,36 @@ if [ "x$OSG_SINGULARITY_REEXEC" = "x" ]; then
                                          | grep "Hello World") 1>&2 \
         ; then
             # singularity simple exec failed - we are done
+            info "Singularity simple exec failed.  Disabling support"
+            HAS_SINGULARITY="False"
+        fi
+    fi
+
+    # Let's now check for SITECONF presence.
+    if [ "x$HAS_SINGULARITY" = "xTrue" ]; then
+
+        # Various possible mount points to pull into the container:
+        for VAR in /etc/cvmfs/SITECONF; do
+            if [ -e "$VAR" -a -e "$OSG_SINGULARITY_IMAGE_DEFAULT/$VAR" ]; then
+                EXTRA_ARGS="$EXTRA_ARGS --bind $VAR"
+            fi
+        done
+
+        info "Checking for SITECONF/local"
+        info "$OSG_SINGULARITY_PATH exec $EXTRA_ARGS --bind /cvmfs --bind $PWD:/srv --pwd /srv --scratch /var/tmp --scratch /tmp --containall $OSG_SINGULARITY_IMAGE_DEFAULT echo Hello World | grep Hello World"
+        if ! ($OSG_SINGULARITY_PATH exec $EXTRA_ARGS \
+                                         --bind /cvmfs \
+                                         --bind $PWD:/srv \
+                                         --pwd /srv \
+                                         --scratch /var/tmp \
+                                         --scratch /tmp \
+                                         --containall \
+                                         "$OSG_SINGULARITY_IMAGE_DEFAULT" \
+                                         /bin/sh -c '[ -e /cvmfs/cms.cern.ch/SITECONF/local/ ]' \
+                                         ) 1>&2 \
+        ; then
+            # singularity simple exec failed - we are done
+            info "SITECONF is not present inside Singularity container.  Disabling support"
             HAS_SINGULARITY="False"
         fi
     fi
@@ -197,6 +227,17 @@ if [ "x$OSG_SINGULARITY_REEXEC" = "x" ]; then
             EXTRA_ARGS=" --home $SING_OUTSIDE_BASE_DIR:/srv"
         fi
 
+        # Various possible mount points to pull into the container:
+        for VAR in /cms /hadoop /hdfs /mnt/hadoop /etc/cvmfs/SITECONF; do
+            if [ -e "$VAR" ]; then
+                EXTRA_ARGS="$EXTRA_ARGS --bind $VAR"
+            fi
+        done
+
+        # Update the location of the advertise script:
+        add_config_line_source=`echo "$add_config_line_source" | sed -E "s;.*/glide_[a-zA-Z0-9]+(.*);/srv\1;"`
+        condor_vars_file=`echo "$condor_vars_file" | sed -E "s;.*/glide_[a-zA-Z0-9]+(.*);/srv\1;"`
+
         # let "inside" script know we are re-execing
         export OSG_SINGULARITY_REEXEC=1
         info "$OSG_SINGULARITY_PATH exec $EXTRA_ARGS --bind /cvmfs --bind $SING_OUTSIDE_BASE_DIR:/srv --pwd /srv --scratch /var/tmp --scratch /tmp --containall $OSG_SINGULARITY_IMAGE_DEFAULT $CMD"
@@ -217,25 +258,32 @@ if [ "x$OSG_SINGULARITY_REEXEC" = "x" ]; then
     
     # if we get here, singularity is not available or not working
     advertise HAS_SINGULARITY "False" "C"
-else
-    info "Already running inside singularity"
-    # delay the advertisement until here to make sure singularity actually works
-    advertise HAS_SINGULARITY "True" "C"
-    advertise OSG_SINGULARITY_VERSION "$OSG_SINGULARITY_VERSION" "S"
-    advertise OSG_SINGULARITY_PATH "$OSG_SINGULARITY_PATH" "S"
-    advertise OSG_SINGULARITY_IMAGE_DEFAULT "$OSG_SINGULARITY_IMAGE_DEFAULT" "S"
-    advertise GLIDEIN_REQUIRED_OS "rhel6,rhel7" "S"
+    exit 0
+fi
 
-    # Disable glexec if we are going to use Singularity.
-    advertise GLEXEC_JOB "False" "C"
-   
-    # fix up the env
-    for key in X509_USER_PROXY X509_USER_CERT _CONDOR_MACHINE_AD _CONDOR_JOB_AD \
+
+info "Already running inside singularity"
+
+# fix up the env
+for key in X509_USER_PROXY X509_USER_CERT _CONDOR_MACHINE_AD _CONDOR_JOB_AD \
                _CONDOR_SCRATCH_DIR _CONDOR_CHIRP_CONFIG _CONDOR_JOB_IWD \
                add_config_line_source condor_vars_file ; do
-        eval val="\$$key"
-        val=`echo "$val" | sed -E "s;$SING_OUTSIDE_BASE_DIR(.*);/srv\1;"`
-        eval $key=$val
-    done
-fi
+    eval val="\$$key"
+    val=`echo "$val" | sed -E "s;$SING_OUTSIDE_BASE_DIR(.*);/srv\1;"`
+    eval $key=$val
+done
+
+# Any further tests that require Singularity should go here.
+
+
+# At this point, we're convinced Singularity works
+advertise HAS_SINGULARITY "True" "C"
+advertise OSG_SINGULARITY_VERSION "$OSG_SINGULARITY_VERSION" "S"
+advertise OSG_SINGULARITY_PATH "$OSG_SINGULARITY_PATH" "S"
+advertise OSG_SINGULARITY_IMAGE_DEFAULT "$OSG_SINGULARITY_IMAGE_DEFAULT" "S"
+advertise GLIDEIN_REQUIRED_OS "any" "S"
+
+# Disable glexec if we are going to use Singularity.
+advertise GLEXEC_JOB "False" "C"
+advertise GLEXEC_BIN "NONE" "C"
 

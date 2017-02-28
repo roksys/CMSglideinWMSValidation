@@ -75,7 +75,14 @@ if [ "x$SINGULARITY_REEXEC" = "x" ]; then
         # Custom URIs: http://singularity.lbl.gov/user-guide#supported-uris
         if [ "x$OSG_SINGULARITY_IMAGE" = "x" ]; then
             # Use OS matching to determine default; otherwise, set to the global default.
-            DESIRED_OS=$(python -c "print sorted(list(set('$REQUIRED_OS'.split(',')).intersection('$GLIDEIN_REQUIRED_OS'.split(','))))[0]" 2>/dev/null)
+            if [ "x$GLIDEIN_REQUIRED_OS" = "xany" ]; then
+                DESIRED_OS=$REQUIRED_OS
+                if [ "x$DESIRED_OS" = "xany" ]; then
+                    DESIRED_OS=rhel7
+                fi
+            else
+                DESIRED_OS=$(python -c "print sorted(list(set('$REQUIRED_OS'.split(',')).intersection('$GLIDEIN_REQUIRED_OS'.split(','))))[0]" 2>/dev/null)
+            fi
             if [ "x$DESIRED_OS" = "x" ]; then
                 export OSG_SINGULARITY_IMAGE="$OSG_SINGULARITY_IMAGE_DEFAULT"
             elif [ "x$DESIRED_OS" = "xrhel6" ]; then
@@ -89,8 +96,10 @@ if [ "x$SINGULARITY_REEXEC" = "x" ]; then
 
         # If condor_chirp is present, then copy it inside the container.
         if [ -e ../../main/condor/libexec/condor_chirp ]; then
-            mkdir -p bin
-            cp ../../main/condor/libexec/condor_chirp bin/condor_chirp
+            mkdir -p condor/libexec
+            cp ../../main/condor/libexec/condor_chirp condor/libexec/condor_chirp
+            mkdir -p condor/lib
+            cp -r ../../main/condor/lib condor/
         fi
 
         OSG_SINGULARITY_EXTRA_OPTS=""
@@ -107,6 +116,13 @@ if [ "x$SINGULARITY_REEXEC" = "x" ]; then
         if [ "x$OSG_SINGULARITY_BIND_CVMFS" = "x1" ]; then
             OSG_SINGULARITY_EXTRA_OPTS="$OSG_SINGULARITY_EXTRA_OPTS --bind /cvmfs"
         fi
+
+        # Various possible mount points to pull into the container:
+        for VAR in /cms /hadoop /hdfs /mnt/hadoop /etc/cvmfs/SITECONF; do
+            if [ -e "$VAR" ]; then
+                OSG_SINGULARITY_EXTRA_OPTS="$OSG_SINGULARITY_EXTRA_OPTS --bind $VAR"
+            fi
+        done
 
         # We want to bind $PWD to /srv within the container - however, in order
         # to do that, we have to make sure everything we need is in $PWD, most
@@ -171,8 +187,9 @@ else
     fi
 
     # Add Chirp back to the environment
-    if [ -e $PWD/bin/condor_chirp ]; then
-        export PATH=$PWD/bin:$PATH
+    if [ -e $PWD/condor/libexec/condor_chirp ]; then
+        export PATH=$PWD/condor/libexec:$PATH
+        export LD_LIBRARY_PATH=$PWD/condor/lib:$LD_LIBRARY_PATH
     fi
 
     # Some java programs have seen problems with the timezone in our containers.
