@@ -86,10 +86,10 @@ if [ "x$SINGULARITY_REEXEC" = "x" ]; then
             if [ "x$DESIRED_OS" = "x" ]; then
                 export OSG_SINGULARITY_IMAGE="$OSG_SINGULARITY_IMAGE_DEFAULT"
             elif [ "x$DESIRED_OS" = "xrhel6" ]; then
-                export OSG_SINGULARITY_IMAGE="/cvmfs/singularity.opensciencegrid.org/opensciencegrid/osg-wn:3.3-el6"
+                export OSG_SINGULARITY_IMAGE="/cvmfs/singularity.opensciencegrid.org/bbockelm/cms:rhel6"
             else
                 # For now, we just enumerate RHEL6 and RHEL7.
-                export OSG_SINGULARITY_IMAGE="/cvmfs/singularity.opensciencegrid.org/opensciencegrid/osg-wn:3.3-el7"
+                export OSG_SINGULARITY_IMAGE="/cvmfs/singularity.opensciencegrid.org/bbockelm/cms:rhel7"
             fi
             export OSG_SINGULARITY_BIND_CVMFS=1
         fi
@@ -102,15 +102,8 @@ if [ "x$SINGULARITY_REEXEC" = "x" ]; then
             cp -r ../../main/condor/lib condor/
         fi
 
-        OSG_SINGULARITY_EXTRA_OPTS=""
-
-        # workaround for user nobody with HOME=/
-        if [ "x$USER" = "x" ]; then
-            export USER=`whoami 2>/dev/null`
-        fi
-        if [ "x$USER" = "xnobody" ]; then
-            OSG_SINGULARITY_EXTRA_OPTS="$OSG_SINGULARITY_EXTRA_OPTS --home $PWD:/srv"
-        fi
+        # Make sure $HOME isn't shared
+        OSG_SINGULARITY_EXTRA_OPTS="--home $PWD:/srv"
 
         # cvmfs access inside container (default, but optional)
         if [ "x$OSG_SINGULARITY_BIND_CVMFS" = "x1" ]; then

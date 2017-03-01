@@ -138,21 +138,15 @@ if [ "x$OSG_SINGULARITY_REEXEC" = "x" ]; then
     fi
 
     # default image for this glidein
-    export OSG_SINGULARITY_IMAGE_DEFAULT="/cvmfs/singularity.opensciencegrid.org/opensciencegrid/osg-wn:3.3-el6"
+    export OSG_SINGULARITY_IMAGE_DEFAULT="/cvmfs/singularity.opensciencegrid.org/bbockelm/cms:rhel6"
 
     # for now, we will only advertise singularity on nodes which can access cvmfs
     if [ ! -e "$OSG_SINGULARITY_IMAGE_DEFAULT" ]; then
         HAS_SINGULARITY="False"
     fi
 
-    # workaround for user nobody with HOME=/
-    if [ "x$USER" = "x" ]; then
-        export USER=`whoami 2>/dev/null`
-    fi
-    EXTRA_ARGS=""
-    if [ "x$USER" = "xnobody" ]; then
-        EXTRA_ARGS=" --home $PWD:/srv"
-    fi
+    # Make sure $HOME exists and isn't shared
+    EXTRA_ARGS="--home $PWD:/srv"
 
     # Let's do a simple singularity test by echoing something inside, and then
     # grepping for it outside. This takes care of some errors which happen "late"
@@ -221,11 +215,8 @@ if [ "x$OSG_SINGULARITY_REEXEC" = "x" ]; then
             CMD="$CMD $VAR"
         done
     
-        # workaround for user nobody with HOME=/
-        EXTRA_ARGS=""
-        if [ "x$USER" = "xnobody" ]; then
-            EXTRA_ARGS=" --home $SING_OUTSIDE_BASE_DIR:/srv"
-        fi
+        # Make sure $HOME isn't shared
+        EXTRA_ARGS="--home $SING_OUTSIDE_BASE_DIR:/srv"
 
         # Various possible mount points to pull into the container:
         for VAR in /cms /hadoop /hdfs /mnt/hadoop /etc/cvmfs/SITECONF; do
