@@ -121,7 +121,7 @@ def create_local_glidein(glidein_config):
     add_glidein_config("GLIDEIN_Start", value)
 
 
-def main():
+def get_glidein_config():
 
     if 'glidein_config' not in os.environ:
         print "No glidein_config environment variable present; defaulting value to 'glidein_config'"
@@ -139,6 +139,13 @@ def main():
         if len(info) != 2:
             continue
         glidein_config[info[0]] = info[1]
+
+    return glidein_config
+
+
+def main():
+
+    glidein_config = get_glidein_config()
 
     local_siteconf = os.path.join(get_siteconf_path(), "local")
     if not os.path.exists(local_siteconf):
