@@ -199,7 +199,7 @@ def main():
         return
 
     if 'mean' in result:
-        add_condor_config_var(glidein_config, name="DIRACBenchmark", kind="C", value=result['mean'])
+        add_condor_config_var(glidein_config, name="DIRACBenchmark", kind="C", value=str(result['mean']))
 
 #
 # If we run as a command
