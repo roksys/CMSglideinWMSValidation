@@ -181,21 +181,30 @@ def jobslotDiracBenchmark( instances = None, iterations = 1 ):
   """ Run as many instances as needed to occupy the job slot
   """
 
-  adValues = readAdValues(['cpus'], 'machine', castInt=True)
-  cpus = adValues.setdefault('cpus', 1)
+  if not instances:
+      adValues = readAdValues(['cpus'], 'machine', castInt=True)
+      instances = adValues.setdefault('cpus', 1)
   
-  return multipleDiracBenchmark( instances = cpus, iterations = iterations )
+  return multipleDiracBenchmark( instances = instances, iterations = iterations )
 
 
 def main():
 
-    result = jobslotDiracBenchmark()
-
-    print "Result from DIRAC benchmark:", result
-
     try:
         glidein_config = get_glidein_config()
     except:
+        glidein_config = {'GLIDEIN_CPUS': 0}
+
+    try:
+        cpus = int(glidein_config['GLIDEIN_CPUS'])
+    except:
+        cpus = None
+
+    result = jobslotDiracBenchmark(instances=cpus)
+
+    print "Result from DIRAC benchmark:", result
+
+    if not glidein_config:
         return
 
     if 'mean' in result:
@@ -211,4 +220,5 @@ if __name__ == "__main__":
   except:
     # Always succeed - this is advisory info.
     traceback.print_exc()
+    sys.exit(0)
 
