@@ -51,13 +51,11 @@ send_dashboard_report() {
 	#Check job status that will be reported to the dashboard
 	if [ "$exit_code" = 0 ]; then
 		grid_status="succeeded"
-		"$error_gen" -ok "psst.sh" "finished successfully" "0"
+		#"$error_gen" -ok "psst.sh" "finished successfully" "0"
 	else
 		grid_status="failed"
-		exit_code=$((exit_code + exit_code_range))
-		echo $exit_code
-		#"$error_gen" -ok "psst.sh" "finished successfully" "0"
-		 "$error_gen" -error "psst.sh" "WN_Resource" "Failed with ${exit_code}" "site_name" "${site_name}" "ce" "${target_ce}"
+		exit_code=$((exit_code + exit_code_range))	
+		#"$error_gen" -error "psst.sh" "WN_Resource" "Failed with ${exit_code}" "site_name" "${site_name}" "ce" "${target_ce}"
 	fi
 	echo "Sending post job info to the dashboard"
 	echo $site_name $target_ce $exit_code $grid_status $task $job
