@@ -272,7 +272,7 @@ advertise HAS_SINGULARITY "True" "C"
 advertise OSG_SINGULARITY_VERSION "$OSG_SINGULARITY_VERSION" "S"
 advertise OSG_SINGULARITY_PATH "$OSG_SINGULARITY_PATH" "S"
 advertise OSG_SINGULARITY_IMAGE_DEFAULT "$OSG_SINGULARITY_IMAGE_DEFAULT" "S"
-advertise GLIDEIN_REQUIRED_OS "rhel6" "S"
+advertise GLIDEIN_REQUIRED_OS "any" "S"
 
 # Disable glexec if we are going to use Singularity.
 advertise GLEXEC_JOB "False" "C"
