@@ -62,6 +62,13 @@ def singleDiracBenchmark( iterations = 1 ):
   # Return DIRAC-compatible values
   return { 'CPU' : cput, 'WALL' : wall, 'NORM' : calib * iterations / wall, 'UNIT' : 'DB12' }
 
+def getCpuModel():
+    with open("/proc/cpuinfo") as fp:
+        for line in fp:
+            if line.startswith("model name"):
+                return line.split(":", 1)[-1].strip()
+    return None
+
 def singleDiracBenchmarkProcess( resultObject, iterations = 1 ):
 
   """ Run singleDiracBenchmark() in a multiprocessing friendly way
@@ -196,6 +203,13 @@ def main():
         glidein_config = {'GLIDEIN_CPUS': 0}
 
     try:
+        model = getCpuModel()
+    except:
+        print "Failed to lookup CPU model"
+        traceback.print_exc()
+        model = None
+
+    try:
         cpus = int(glidein_config['GLIDEIN_CPUS'])
     except:
         cpus = None
@@ -204,11 +218,15 @@ def main():
 
     print "Result from DIRAC benchmark:", result
 
-    if not glidein_config:
+    if model:
+        print "Detected CPU model '%s'" % model
+
+    if not glidein_config or not cpus:
         return
 
     if 'mean' in result:
         add_condor_config_var(glidein_config, name="DIRACBenchmark", kind="C", value=str(result['mean']))
+    add_condor_config_var(glidein_config, name="CPUModel", kind="S", value=str(model))
 
 #
 # If we run as a command
