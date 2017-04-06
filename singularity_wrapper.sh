@@ -56,6 +56,7 @@ if [ "x$SINGULARITY_REEXEC" = "x" ]; then
     export OSG_SINGULARITY_AUTOLOAD=$(getPropStr $_CONDOR_JOB_AD SingularityAutoLoad)
     export GLIDEIN_REQUIRED_OS=$(getPropStr $_CONDOR_MACHINE_AD GLIDEIN_REQUIRED_OS)
     export REQUIRED_OS=$(getPropStr $_CONDOR_JOB_AD REQUIRED_OS)
+    export CMSSITE=$(getPropStr $_CONDOR_MACHINE_AD GLIDEIN_CMSSite)
 
     if [ "x$OSG_SINGULARITY_AUTOLOAD" = "x" ]; then
         # default for autoload is true
@@ -139,9 +140,24 @@ if [ "x$SINGULARITY_REEXEC" = "x" ]; then
             CMD="$CMD $VAR"
         done
 
+        # If the container has disappeared on us (say, due to CVMFS issues that sprang up since the last
+        # validation test), then it is too late to turn off Singularity, re-enable glexec, and run the job.
+        # Best we can hope for is sleeping for 20 minutes to prevent the slot from becoming a black hole.
+        if [ ! -e "$OSG_SINGULARITY_IMAGE" ]; then
+            echo "Fatal worker node (`hostname` @ $CMSSITE) error: $OSG_SINGULARITY_IMAGE does not exist"
+            /bin/sh -c 'exec -a "Fail due to missing singualrity image; sleep" sleep 20m'
+            exit 1
+        fi
+
+        # Have the singularity wrapper scripts sit inside singularity.opensciencegrid.org.
+        # If only the payload lives inside the namespace, then autofs may try to unmount it
+        # (as it looks unused) and cause a dangling mount.
+        PILOT_DIR=$PWD
+        cd /cvmfs/singularity.opensciencegrid.org
+
         export SINGULARITY_REEXEC=1
         exec $OSG_SINGULARITY_PATH exec $OSG_SINGULARITY_EXTRA_OPTS \
-                                   --bind $PWD:/srv \
+                                   --bind $PILOT_DIR:/srv \
                                    --pwd /srv \
                                    --scratch /var/tmp \
                                    --scratch /tmp \
