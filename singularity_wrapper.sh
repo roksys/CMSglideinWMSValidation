@@ -112,7 +112,7 @@ if [ "x$SINGULARITY_REEXEC" = "x" ]; then
         fi
 
         # Various possible mount points to pull into the container:
-        for VAR in /cms /hadoop /hdfs /mnt/hadoop /etc/cvmfs/SITECONF; do
+        for VAR in /lfs_roots /cms /hadoop /hdfs /mnt/hadoop /etc/cvmfs/SITECONF; do
             if [ -e "$VAR" ]; then
                 OSG_SINGULARITY_EXTRA_OPTS="$OSG_SINGULARITY_EXTRA_OPTS --bind $VAR"
             fi
