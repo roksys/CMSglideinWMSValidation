@@ -163,7 +163,7 @@ if [ "x$SINGULARITY_REEXEC" = "x" ]; then
                                    --scratch /tmp \
                                    --containall \
                                    "$OSG_SINGULARITY_IMAGE" \
-                                   /srv/.osgvo-user-job-wrapper.sh $CMD
+                                   /srv/.osgvo-user-job-wrapper.sh "$CMD"
     fi
 
 else
