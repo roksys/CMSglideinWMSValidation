@@ -190,6 +190,10 @@ else
         fi
     done
 
+    # If the CVMFS worker node client was used, then GFAL_PLUGINS_DIR might be
+    # incompatible with our local environment.
+    unset GFAL_PLUGIN_DIR
+
     # override some OSG specific variables
     if [ "x$OSG_WN_TMP" != "x" ]; then
         export OSG_WN_TMP=/tmp
