@@ -132,12 +132,12 @@ if [ "x$SINGULARITY_REEXEC" = "x" ]; then
         fi
 
         # build a new command line, with updated paths
-        CMD=""
+        CMD=()
         for VAR in "$@"; do
             # two seds to make sure we catch variations of the iwd,
             # including symlinked ones
             VAR=`echo " $VAR" | sed -E "s;$PWD(.*);/srv\1;" | sed -E "s;.*/execute/dir_[0-9a-zA-Z]*(.*);/srv\1;"`
-            CMD="$CMD $VAR"
+            CMD+=("$VAR")
         done
 
         # If the container has disappeared on us (say, due to CVMFS issues that sprang up since the last
@@ -163,7 +163,7 @@ if [ "x$SINGULARITY_REEXEC" = "x" ]; then
                                    --scratch /tmp \
                                    --containall \
                                    "$OSG_SINGULARITY_IMAGE" \
-                                   /srv/.osgvo-user-job-wrapper.sh "$CMD"
+                                   /srv/.osgvo-user-job-wrapper.sh "${CMD[@]}"
     fi
 
 else
