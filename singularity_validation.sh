@@ -153,20 +153,39 @@ if [ "x$OSG_SINGULARITY_REEXEC" = "x" ]; then
     # in the execing, like:
     # ERROR  : Could not identify basedir for home directory path: /
     if [ "x$HAS_SINGULARITY" = "xTrue" ]; then
-        info "$OSG_SINGULARITY_PATH exec $EXTRA_ARGS --bind /cvmfs --bind $PWD:/srv --pwd /srv --scratch /var/tmp --scratch /tmp --containall $OSG_SINGULARITY_IMAGE_DEFAULT echo Hello World | grep Hello World"
+        info "$OSG_SINGULARITY_PATH exec $EXTRA_ARGS --bind /cvmfs --bind $PWD:/srv --pwd /srv --scratch /var/tmp --scratch /tmp --contain --ipc --pid $OSG_SINGULARITY_IMAGE_DEFAULT echo Hello World | grep Hello World"
         if ! ($OSG_SINGULARITY_PATH exec $EXTRA_ARGS \
                                          --bind /cvmfs \
                                          --bind $PWD:/srv \
                                          --pwd /srv \
                                          --scratch /var/tmp \
                                          --scratch /tmp \
-                                         --containall \
+                                         --contain --ipc --pid \
                                          "$OSG_SINGULARITY_IMAGE_DEFAULT" \
                                          echo "Hello World" \
                                          | grep "Hello World") 1>&2 \
         ; then
             # singularity simple exec failed - we are done
             info "Singularity simple exec failed.  Disabling support"
+            HAS_SINGULARITY="False"
+        fi
+    fi
+
+    # also verify that the env is inherited correctly
+    if [ "x$HAS_SINGULARITY" = "xTrue" ]; then
+        info "$OSG_SINGULARITY_PATH exec $EXTRA_ARGS --bind /cvmfs --pwd /srv --scratch /var/tmp --scratch /tmp --contain --ipc --pid $OSG_SINGULARITY_IMAGE_DEFAULT env | grep OSG_SINGULARITY_IMAGE_DEFAULT"
+        if ! ($OSG_SINGULARITY_PATH exec $EXTRA_ARGS \
+                                         --bind /cvmfs \
+                                         --pwd /srv \
+                                         --scratch /var/tmp \
+                                         --scratch /tmp \
+                                         --contain --ipc --pid \
+                                         "$OSG_SINGULARITY_IMAGE_DEFAULT" \
+                                         env \
+                                         | grep OSG_SINGULARITY_IMAGE_DEFAULT) 1>&2 \
+        ; then
+            # singularity env fail - we are done
+            warn "Singularity is not inheriting the outside environment.  Disabling support"
             HAS_SINGULARITY="False"
         fi
     fi
@@ -182,14 +201,14 @@ if [ "x$OSG_SINGULARITY_REEXEC" = "x" ]; then
         done
 
         info "Checking for SITECONF/local"
-        info "$OSG_SINGULARITY_PATH exec $EXTRA_ARGS --bind /cvmfs --bind $PWD:/srv --pwd /srv --scratch /var/tmp --scratch /tmp --containall $OSG_SINGULARITY_IMAGE_DEFAULT echo Hello World | grep Hello World"
+        info "$OSG_SINGULARITY_PATH exec $EXTRA_ARGS --bind /cvmfs --bind $PWD:/srv --pwd /srv --scratch /var/tmp --scratch /tmp --contain --ipc --pid $OSG_SINGULARITY_IMAGE_DEFAULT echo Hello World | grep Hello World"
         if ! ($OSG_SINGULARITY_PATH exec $EXTRA_ARGS \
                                          --bind /cvmfs \
                                          --bind $PWD:/srv \
                                          --pwd /srv \
                                          --scratch /var/tmp \
                                          --scratch /tmp \
-                                         --containall \
+                                         --contain --ipc --pid \
                                          "$OSG_SINGULARITY_IMAGE_DEFAULT" \
                                          /bin/sh -c '[ -e /cvmfs/cms.cern.ch/SITECONF/local/ ]' \
                                          ) 1>&2 \
@@ -231,14 +250,14 @@ if [ "x$OSG_SINGULARITY_REEXEC" = "x" ]; then
 
         # let "inside" script know we are re-execing
         export OSG_SINGULARITY_REEXEC=1
-        info "$OSG_SINGULARITY_PATH exec $EXTRA_ARGS --bind /cvmfs --bind $SING_OUTSIDE_BASE_DIR:/srv --pwd /srv --scratch /var/tmp --scratch /tmp --containall $OSG_SINGULARITY_IMAGE_DEFAULT $CMD"
+        info "$OSG_SINGULARITY_PATH exec $EXTRA_ARGS --bind /cvmfs --bind $SING_OUTSIDE_BASE_DIR:/srv --pwd /srv --scratch /var/tmp --scratch /tmp --contain --ipc --pid $OSG_SINGULARITY_IMAGE_DEFAULT $CMD"
         if $OSG_SINGULARITY_PATH exec $EXTRA_ARGS \
                                       --bind /cvmfs \
                                       --bind $SING_OUTSIDE_BASE_DIR:/srv \
                                       --pwd /srv \
                                       --scratch /var/tmp \
                                       --scratch /tmp \
-                                      --containall \
+                                      --contain --ipc --pid \
                                       "$OSG_SINGULARITY_IMAGE_DEFAULT" \
                                       $CMD \
         ; then
