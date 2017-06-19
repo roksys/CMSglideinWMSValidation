@@ -35,7 +35,7 @@ function getPropStr
 }
 
 
-if [ "x$SINGULARITY_REEXEC" = "x" ]; then
+if [ "x$OSG_SINGULARITY_REEXEC" = "x" ]; then
     
     if [ "x$_CONDOR_JOB_AD" = "x" ]; then
         export _CONDOR_JOB_AD="NONE"
@@ -155,13 +155,13 @@ if [ "x$SINGULARITY_REEXEC" = "x" ]; then
         PILOT_DIR=$PWD
         cd /cvmfs/singularity.opensciencegrid.org
 
-        export SINGULARITY_REEXEC=1
+        export OSG_SINGULARITY_REEXEC=1
         exec $OSG_SINGULARITY_PATH exec $OSG_SINGULARITY_EXTRA_OPTS \
                                    --bind $PILOT_DIR:/srv \
                                    --pwd /srv \
                                    --scratch /var/tmp \
                                    --scratch /tmp \
-                                   --containall \
+                                   --contain --ipc --pid \
                                    "$OSG_SINGULARITY_IMAGE" \
                                    /srv/.osgvo-user-job-wrapper.sh "${CMD[@]}"
     fi
