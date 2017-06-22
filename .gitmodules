@@ -1,0 +1,3 @@
+[submodule "PSST/reporting/stomp.py"]
+	path = PSST/reporting/stomp.py
+	url = https://github.com/jasonrbriggs/stomp.py
