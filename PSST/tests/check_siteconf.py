@@ -79,6 +79,17 @@ if calib_data:
     frontier_connect = calib_data.find("frontier-connect")
     if frontier_connect:
         print "frontier-connect section was found"
+        # site-local-config.xml has a proxy or a proxyconfig tag
+        if frontier_connect.find("proxyconfig") is not None:
+            proxy = frontier_connect.find("proxyconfig")
+        else:
+            proxy = frontier_connect.find("proxy")
+        if proxy is not None and proxy.get("url"):
+            print "Proxy string was found"
+            print proxy.get("url")
+        else:
+            print os.environ["ERROR_NO_PROXY_STRING_MSG"]
+            sys.exit(int(os.environ["ERROR_NO_PROXY_STRING"]))
     else:
         print os.environ["ERROR_FRONTIER_CONNECT_NOT_FOUND_MSG"]
         sys.exit(int(os.environ["ERROR_FRONTIER_CONNECT_NOT_FOUND"]))
@@ -86,6 +97,18 @@ else:
     print os.environ["ERROR_CALIB_DATA_NOT_FOUND_MSG"]
     sys.exit(int(os.environ["ERROR_CALIB_DATA_NOT_FOUND"]))
 
+event_data = job_config_root[0].find("event-data")
+if event_data:
+    tfc = event_data.find("catalog")
+    if (tfc is not None) and tfc.get("url"):
+        print "TrivialFileCatalog string was found"
+        print tfc.get("url")
+    else:
+        print os.environ["ERROR_NO_TFC_MSG"]
+        sys.exit(int(os.environ['ERROR_NO_TFC']))
+else:
+    print os.environ["ERROR_NO_EVENT_DATA_MSG"]
+    sys.exit(int(os.environ['ERROR_NO_EVENT_DATA']))
 
 fallback_stage_out = job_config_root[0].find("fallback-stage-out")
 if fallback_stage_out:
@@ -94,8 +117,8 @@ if fallback_stage_out:
         pnn_found = True
         print "Fallback stage-out node value: %s" % phedex_node.get("value")
     if not pnn_found:
-        print os.environ["WARNING_PNN_NOT_FOUND_MSG"]
-        sys.exit(int(os.environ["WARNING_PNN_NOT_FOUND"]))
-else:
-    print os.environ["WARNING_FALLBACK_STAGEOUT_NOT_FOUND_MSG"]
-    sys.exit(int(os.environ["WARNING_FALLBACK_STAGEOUT_NOT_FOUND"]))
+        print os.environ["ERROR_PNN_NOT_FOUND_MSG"]
+        sys.exit(int(os.environ["ERROR_PNN_NOT_FOUND"]))
+# else:
+#     print os.environ["WARNING_FALLBACK_STAGEOUT_NOT_FOUND_MSG"]
+#     sys.exit(int(os.environ["WARNING_FALLBACK_STAGEOUT_NOT_FOUND"]))
