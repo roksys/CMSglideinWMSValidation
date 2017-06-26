@@ -201,15 +201,17 @@ exit_code=$?
 echo "Exit code:" $exit_code
 test_result
 
-echo "Siteconf validation"
-/usr/bin/python ${my_tar_dir}/tests/check_siteconf.py
+# echo "Siteconf validation"
+# /usr/bin/python ${my_tar_dir}/tests/check_siteconf.py
+# exit_code=$?
+# echo "Exit code:" $exit_code
+# test_result
+
+echo "Squid validation"
+. ${my_tar_dir}/tests/test_squid.sh $glidein_config $my_tar_dir
 exit_code=$?
 echo "Exit code:" $exit_code
 test_result
 
 send_dashboard_report
 exit $exit_code
-# let's exit with 0, to do not affect CMS activities
-# as now we are interested only in results reported to
-# job dashboard
-# exit 0
