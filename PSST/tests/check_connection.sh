@@ -14,6 +14,7 @@ fi
 /usr/bin/nc -zv -w 5 google.com 80
 if [ $? -ne 0 ]; then
   echo "Online"
+  exit 0
 else
   echo $ERROR_NO_CONNECTION_MSG
   exit $ERROR_NO_CONNECTION
