@@ -5,7 +5,7 @@
 # -z just scan for listening daemons, without sending any data to them.
 # -v more verbose output
 # -w timeout
-/usr/bin/nc -zv -w 5 dashb-mb.cern.ch 61113
+/usr/bin/nc -zv -w 15 dashb-mb.cern.ch 61113
 if [ $? -eq 0 ]; then
   echo "Online"
   exit 0
