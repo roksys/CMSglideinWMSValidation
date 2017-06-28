@@ -24,4 +24,6 @@ if [[ $(echo "$cpu_load >= $physical_cpus" | bc) -eq 1 ]]; then
 elif [[ $(echo "$(echo $cpu_load + $pilot_cores | bc) >= $physical_cpus" | bc) -eq 1 ]]; then
   echo $WARNING_CPU_LOAD_MSG
   metrics+=" status WARNING"
+  metrics+=" warning_code ${WARNING_CPU_LOAD}"
+  # return $WARNING_CPU_LOAD
 fi

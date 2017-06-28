@@ -8,13 +8,14 @@
 # report to ES will be sent
 # log file will be removed
 # PSST will exit
+# [40;50] rang is reserved for WARNINGS
 #######################################
 test_result() {
-if [ "$exit_code" -ne 0 ]; then
-  send_dashboard_report
-  rm "$log_file"
-  exit "$exit_code"
-fi
+  if [ "$exit_code" -ne 0 ]; then
+      send_dashboard_report
+      rm "$log_file"
+      exit "$exit_code"
+    fi
 }
 
 #######################################
@@ -33,16 +34,21 @@ send_dashboard_report() {
   if [ "$exit_code" = 0 ]; then
     if [[ $metrics != *"status"* ]]; then
       metrics+=" status OK"
+      psst_exit_code=$exit_code
     else
-      #we will report only last status
-      last_status=$(echo "$metrics" | grep --only-matching 'status\s*[CRITICAL|WARNING|OK]*' | tail -n 1)
-      #deleting all statuses
+      echo $metrics
+      #finding first warning code
+      warning_code=$(echo $metrics | awk '{for(i=1;i<=NF;i++) if ($i=="warning_code") print $(i+1)}'| head -n 1)
+      status=$(echo "$metrics" | grep --only-matching 'status\s*[CRITICAL|WARNING|OK]*' | head -n 1)
+      #deleting all warning codes, statuses
+      metrics=$(echo "$metrics" | sed -e 's/\<warning_code\>\s*[[:digit:]]*//g')
       metrics=$(echo "$metrics" | sed -e 's/\<status\>\s*[a-zA-Z]*//g')
-      #let's add back latest status
-      metrics+=" ${last_status}"
+      #adding back first warning code, first status
+      metrics+=" ${status}"
+      psst_exit_code=$((warning_code + exit_code_range))
     fi
     #generating otrb_output.xml - http://glideinwms.fnal.gov/doc.prd/factory/custom_scripts.html#xml_output
-    "$error_gen" -ok "psst.sh" "exit_code" 0 $metrics "logs" "${logs}"
+    "$error_gen" -ok "psst.sh" "exit_code" $psst_exit_code $metrics "logs" "${logs}"
   else
     metrics=$(echo "$metrics" | sed -e 's/\<status\>\s*[a-zA-Z]*//g')
     metrics+=" status CRITICAL"
@@ -194,24 +200,29 @@ exit_code=$?
 echo "Exit code:" $exit_code
 test_result
 
-
 echo "Check proxy"
 ${my_tar_dir}/tests/check_proxy.sh
 exit_code=$?
 echo "Exit code:" $exit_code
 test_result
 
-# echo "Siteconf validation"
-# /usr/bin/python ${my_tar_dir}/tests/check_siteconf.py
-# exit_code=$?
-# echo "Exit code:" $exit_code
-# test_result
+echo "Siteconf validation"
+/usr/bin/python ${my_tar_dir}/tests/check_siteconf.py
+exit_code=$?
+echo "Exit code:" $exit_code
+test_result
 
 echo "Squid validation"
 . ${my_tar_dir}/tests/test_squid.sh $glidein_config $my_tar_dir
 exit_code=$?
 echo "Exit code:" $exit_code
-test_result
+
+
+# echo "Isolation validation"
+# ${my_tar_dir}/tests/isolation.sh  $my_tar_dir
+# exit_code=$?
+# echo "Exit code:" $exit_code
+# test_result
 
 send_dashboard_report
 exit $exit_code

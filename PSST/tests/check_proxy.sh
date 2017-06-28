@@ -43,8 +43,11 @@ if [ $result -eq 0 ] ; then
 else
 	isvoms=0
 	echo "WARNING: voms-proxy-info not found"
+	metrics+=" status WARNING"
 fi
 if [ $isvoms -eq 1 -a $l -lt 21600 ] ; then
-	echo "WARNING: proxy shorther than 6 hours"
-fi    
+	echo WARNING_SHORT_PROXY_MSG
+	metrics+=" status WARNING"
+	metrics+=" warning_code ${WARNING_SHORT_PROXY}"
+fi
 exit 0
