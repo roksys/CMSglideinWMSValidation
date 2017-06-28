@@ -15,8 +15,6 @@ echo "Number of physical CPUs"
 grep -c ^processor /proc/cpuinfo
 physical_cpus=$(grep -c ^processor /proc/cpuinfo)
 
-cpu_load=`echo "10:23:11 up 18:34,  0 users,  load average: 2.36, 1.41, 0.81" | grep -ohe 'load average[s:][: ].*' | awk -F'[, ]' '{ print $3}'`
-
 echo $cpu_load
 if [[ $(echo "$cpu_load >= $physical_cpus" | bc) -eq 1 ]]; then
   echo "${ERROR_CPU_LOAD_MSG}, physical_cpus: ${physical_cpus}, cpu_load: ${cpu_load}"

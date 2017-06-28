@@ -51,6 +51,8 @@ ${my_tar_dir}/tests/test_squid.py
 RC=$?
 if [ "$RC" = 40 ]; then
   metrics+=" status WARNING"
+  metrics+=" warning_code ${RC}"
+  return 0
 fi
 
 #add_config_line "CMS_VALIDATION_FRONTIER" $RC
