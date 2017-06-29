@@ -140,15 +140,15 @@ do
     cmssw_ver_path=$(scram -a slc* l -a -c ${cmssw_ver} | tr -s " " | cut -d " " -f3 | sed -n 1p)
     # cmssw_ver_path="/cvmfs/cms.cern.ch/slc6_amd64_gcc530/cms/cmssw/CMSSW_8_0_25/src/HLTrigger/Timer/test/chrono/doc"
     echo "Selecting 10 random files $cmssw_ver_path"
-    random_files=$(find ${cmssw_ver_path} -type f | shuf -n 10)
+    random_files=$(find ${cmssw_ver_path} -maxdepth 3 -type f | shuf -n 10)
     while read -r file; do
       ls_byte_count=$(ls -l "$file" | cut -d " " -f5)
       wc_byte_count=$(wc -c "$file" | cut -d " " -f1)
       if [ "$ls_byte_count" != "$wc_byte_count" ]; then
         echo $ERORR_CORRUPTED_CMSSW_FILES_MSG $file
         return $ERORR_CORRUPTED_CMSSW_FILES
-      # else
-      #   echo "${file}: ls_byte_count=${ls_byte_count}; wc_byte_count=${wc_byte_count}"
+      else
+        echo "${file}: ls_byte_count=${ls_byte_count}; wc_byte_count=${wc_byte_count}"
       fi
     done <<< "$random_files"
     # for file in "$random_files"

@@ -12,10 +12,10 @@
 #######################################
 test_result() {
   if [ "$exit_code" -ne 0 ]; then
-      send_dashboard_report
-      rm "$log_file"
-      exit "$exit_code"
-    fi
+    send_dashboard_report
+    rm "$log_file"
+    exit "$exit_code"
+  fi
 }
 
 #######################################
