@@ -168,6 +168,14 @@ echo "Grep debug level"
 debug=$(grep -m1 -i '^PSST_DEBUG' $glidein_config | awk 'END { if (NR==0 || $2=="")  exit 1; else print $2;}')
 echo "$debug"
 
+echo "Grep result of singularity validation"
+has_singularity=$(grep '^HAS_SINGULARITY ' $glidein_config | awk '{print $2}')
+if [ "$has_singularity" = "True" ]; then
+  metrics+=" singularity True"
+else
+  metrics+=" singularity False"
+fi
+
 echo "Source error codes"
 source ${my_tar_dir}/exit_codes.txt
 export $(cut -d= -f1 ${my_tar_dir}/exit_codes.txt)
@@ -187,6 +195,7 @@ echo "Check cpu load"
 . ${my_tar_dir}/tests/check_cpu_load.sh $cpus
 exit_code=$?
 echo "Exit code:" $exit_code
+test_result
 
 echo "Check software area"
 . ${my_tar_dir}/tests/check_software_area.sh $cpus
@@ -216,13 +225,12 @@ echo "Squid validation"
 . ${my_tar_dir}/tests/test_squid.sh $glidein_config $my_tar_dir
 exit_code=$?
 echo "Exit code:" $exit_code
-
+# test_result
 
 # echo "Isolation validation"
 # ${my_tar_dir}/tests/isolation.sh  $my_tar_dir
 # exit_code=$?
 # echo "Exit code:" $exit_code
-# test_result
 
 send_dashboard_report
 exit $exit_code
