@@ -106,7 +106,11 @@ echo "Printing preliminary information..."
 echo
 echo -n "Sysinfo: "
 uname -a
-/usr/bin/lsb_release -idrc
+if [ -f /usr/bin/lsb_release ]; then
+  /usr/bin/lsb_release -idrc
+else
+  cat /etc/*-release
+fi
 echo -n "LocalDate: "
 date
 echo -n "UTCDate: "
@@ -227,10 +231,6 @@ exit_code=$?
 echo "Exit code:" $exit_code
 # test_result
 
-# echo "Isolation validation"
-# ${my_tar_dir}/tests/isolation.sh  $my_tar_dir
-# exit_code=$?
-# echo "Exit code:" $exit_code
 
 send_dashboard_report
 exit $exit_code
