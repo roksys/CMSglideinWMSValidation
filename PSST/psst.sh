@@ -73,9 +73,7 @@ function checkError(){
     hostname=$(hostname)
     MSG="PSST ERROR: ${1}; hostname: ${hostname}"
     echo "$MSG"
-    if [ "$debug" != "True" ]; then
-      cat $log_file | /usr/bin/Mail -s "${MSG}" ${email_addr}
-    fi
+    cat $log_file | /usr/bin/Mail -s "${MSG}" ${email_addr}
     # cat exmple.log | /usr/bin/Mail -s "${MSG}" ${email_addr}
     rm $log_file
     exit 0
@@ -167,10 +165,6 @@ if [ "X$cpus" = X ]; then
 fi
 checkError "Can't find number of CPUs"
 echo $cpus
-
-echo "Grep debug level"
-debug=$(grep -m1 -i '^PSST_DEBUG' $glidein_config | awk 'END { if (NR==0 || $2=="")  exit 1; else print $2;}')
-echo "$debug"
 
 echo "Grep result of singularity validation"
 has_singularity=$(grep '^HAS_SINGULARITY ' $glidein_config | awk '{print $2}')

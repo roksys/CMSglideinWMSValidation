@@ -10,8 +10,7 @@ psst.tgz: psst.sh \
 		  tests/check_scratch_space.sh \
 		  tests/check_proxy.sh \
 		  tests/check_siteconf.py \
-		  tests/test_squid.sh \
-		  tests/test_squid.py
+		  tests/test_squid.sh
 	tar cvfz psst.tgz psst.sh \
 					  exit_codes.txt \
 					  psst_wrapper.sh \

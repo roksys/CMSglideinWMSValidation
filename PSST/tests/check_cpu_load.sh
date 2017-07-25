@@ -18,7 +18,7 @@ physical_cpus=$(grep -c ^processor /proc/cpuinfo)
 echo $cpu_load
 if [[ $(echo "$cpu_load >= $physical_cpus" | bc) -eq 1 ]]; then
   echo "${ERROR_CPU_LOAD_MSG}, physical_cpus: ${physical_cpus}, cpu_load: ${cpu_load}"
-  return $ERROR_CPU_LOAD
+  # return $ERROR_CPU_LOAD
 elif [[ $(echo "$(echo $cpu_load + $pilot_cores | bc) >= $physical_cpus" | bc) -eq 1 ]]; then
   echo $WARNING_CPU_LOAD_MSG
   metrics+=" status WARNING"

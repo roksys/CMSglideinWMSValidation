@@ -10,10 +10,13 @@ check_connecction() {
   # Fetch the HTTP-header only!
   # -s - Avoid showing progress bar
   # -4 IPv4
-  header=$(curl -4  --connect-timeout 5 --head -s https://${endpoint})
+  # -k allow insecure connections
+  header=$(curl -4 -k --connect-timeout 5 --head -s https://${endpoint})
   rc=$?
+  echo "exit code: " $rc
   client_timestamp_received=$(date +%s)
   if [ "$rc" -eq 0 ]; then
+    echo "$header" | sed 's/\&//g' # removing illegal char & for xml
     server_time=$(echo "$header" | sed -n 's/.*Date: //p')
     server_timestamp=$(date --date="${server_time}" +%s)
     round_trip_time=$((client_timestamp_received-client_timestamp_sent))
@@ -24,8 +27,8 @@ check_connecction() {
     echo "Round trip time:" $round_trip_time
     one_way_trip=$((round_trip_time / 2))
     time_difference=$((client_timestamp_sent + one_way_trip - server_timestamp))
-    if [ "$time_difference" -ge -5 -a "$time_difference" -le 5 ]; then
-      echo "Clock skew is not bigger than 5 sec"
+    if [ "$time_difference" -ge -60 -a "$time_difference" -le 60 ]; then
+      echo "Clock skew is not bigger than 60 sec"
       echo "Test was passed, exiting"
       exit 0
     else
